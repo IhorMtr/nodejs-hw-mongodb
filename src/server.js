@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import pino from 'pino-http';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import contactsRouter from './routers/contacts.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
@@ -28,6 +29,8 @@ export function setupServer() {
       },
     }),
   );
+
+  app.use(cookieParser());
 
   app.use(contactsRouter);
 

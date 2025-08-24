@@ -8,11 +8,9 @@ export function validateBody(validateSchema) {
       });
       next();
     } catch (err) {
-      next(
-        createHttpError(400, 'Bad request', {
-          errors: err.details,
-        }),
-      );
+      throw createHttpError(400, 'Bad request', {
+        errors: err.details,
+      });
     }
   };
 }
