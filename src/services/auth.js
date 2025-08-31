@@ -3,7 +3,11 @@ import { SessionCollection } from '../db/models/session.js';
 import { UserCollection } from '../db/models/user.js';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'node:crypto';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import { sendEmail } from '../utils/sendMail.js';
 
+dotenv.config();
 export async function registerUser(payload) {
   const { email, password, ...rest } = payload;
 
@@ -103,4 +107,58 @@ export async function refreshSession(cookies) {
 
 export async function logoutUser(sessionId) {
   await SessionCollection.deleteOne({ _id: sessionId });
+}
+
+export async function requestResetToken(email) {
+  const user = await UserCollection.findOne({ email });
+
+  if (!user) {
+    const err = new Error('User not found');
+    err.code = 'USER_NOT_FOUND';
+    throw err;
+  }
+
+  const resetToken = jwt.sign(
+    {
+      sub: user._id,
+      email,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: '15m',
+    },
+  );
+
+  return await sendEmail({
+    from: `My app ${process.env.SMTP_FROM}`,
+    to: email,
+    subject: 'Reset your password',
+    html: `<p>Click <a href="${process.env.APP_DOMAIN}/reset-password?token=${resetToken}">here</a> to reset your password!</p>`,
+  });
+}
+
+export async function resetPassword({ token, password }) {
+  let payload;
+
+  try {
+    payload = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    const newErr = new Error('Token is expired or invalid.');
+    newErr.code = 'EXPIRED_OR_INVALID';
+    throw newErr;
+  }
+
+  const user = await UserCollection.findById(payload.sub);
+
+  if (!user) {
+    const err = new Error('User not found');
+    err.code = 'USER_NOT_FOUND';
+    throw err;
+  }
+
+  const hashedPass = await bcrypt.hash(password, 10);
+
+  await UserCollection.findByIdAndUpdate(payload.sub, { password: hashedPass });
+
+  await SessionCollection.findOneAndDelete({ userId: payload.sub });
 }

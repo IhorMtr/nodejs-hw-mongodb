@@ -4,6 +4,8 @@ import {
   logoutUser,
   refreshSession,
   registerUser,
+  requestResetToken,
+  resetPassword,
 } from '../services/auth.js';
 import { THIRTY_DAYS } from '../constants/index.js';
 
@@ -99,4 +101,49 @@ export async function logoutUserController(req, res, next) {
   res.clearCookie('refreshToken');
 
   res.status(204).send();
+}
+
+export async function requestResetTokenController(req, res, next) {
+  try {
+    const { email } = req.body;
+
+    await requestResetToken(email);
+
+    res.status(200).json({
+      status: 200,
+      message: 'Reset password email has been successfully sent.',
+      data: {},
+    });
+  } catch (err) {
+    if (err.code === 'USER_NOT_FOUND') {
+      return next(createHttpError(404, 'User not found'));
+    }
+
+    res.status(500).json({
+      status: 500,
+      message: 'Failed to send the email, please try again later.',
+    });
+  }
+}
+
+export async function resetPasswordController(req, res, next) {
+  try {
+    await resetPassword(req.body);
+
+    res.status(200).json({
+      status: 200,
+      message: 'Password has been successfully reset.',
+      data: {},
+    });
+  } catch (err) {
+    if (err.code === 'USER_NOT_FOUND') {
+      return next(createHttpError(404, 'User not found!'));
+    }
+
+    if (err.code === 'EXPIRED_OR_INVALID') {
+      return next(createHttpError(401, 'Token is expired or invalid.'));
+    }
+    next(err);
+    return;
+  }
 }
