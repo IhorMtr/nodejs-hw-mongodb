@@ -1,0 +1,40 @@
+# components/schemas/contactsResponse.yaml
+type: object
+required:
+  - contacts
+  - page
+  - perPage
+  - totalItems
+  - totalPages
+  - hasPreviousPage
+  - hasNextPage
+properties:
+  contacts:
+    type: array
+    description: List of contacts
+    items:
+      $ref: ./contact.yaml
+  page:
+    type: integer
+    example: 1
+    description: Current page number
+  perPage:
+    type: integer
+    example: 10
+    description: Number of items per page
+  totalItems:
+    type: integer
+    example: 2
+    description: Total number of contacts
+  totalPages:
+    type: integer
+    example: 1
+    description: Total number of pages
+  hasPreviousPage:
+    type: boolean
+    example: false
+    description: Whether there is a previous page
+  hasNextPage:
+    type: boolean
+    example: false
+    description: Whether there is a next page

@@ -1,0 +1,67 @@
+tags:
+  - Contacts
+summary: Create a new contact
+operationId: createContact
+description: 'Create a new contact with this endpoint. User ID is taken from the authenticated session, not from request body.'
+security:
+  - bearerAuth: []
+requestBody:
+  required: true
+  content:
+    multipart/form-data:
+      schema:
+        type: object
+        required:
+          - name
+          - phoneNumber
+          - contactType
+        properties:
+          name:
+            type: string
+            description: "Contact's name"
+            example: 'John Doe'
+          email:
+            type: string
+            description: "Contact's email"
+            example: 'example@gmail.com'
+          isFavourite:
+            type: boolean
+            description: 'Whether the contact is favourite'
+            example: true
+          phoneNumber:
+            type: string
+            description: "Contact's phone number"
+            example: '+491234567890'
+          contactType:
+            type: string
+            description: "Contact's type"
+            enum: ['work', 'home', 'personal']
+            example: 'work'
+          photo:
+            type: string
+            format: binary
+            description: "Contact's photo file (optional)"
+responses:
+  '201':
+    description: 'Contact successfully created'
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 201
+            message:
+              type: string
+              example: Successfully created a contact!
+            data:
+              $ref: ../../components/schemas/contact.yaml
+  '400':
+    $ref: '../../components/responses/400.yaml'
+  '401':
+    $ref: '../../components/responses/401.yaml'
